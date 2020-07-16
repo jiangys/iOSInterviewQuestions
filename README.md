@@ -44,7 +44,9 @@ KVC（Key-value coding）键值编码。简单来说指iOS的开发中，可以�
 2. 用KVC来访问和修改私有变量
 3. model和字典互转 
 4. 修改一些系统控件的内部属性，使用runtime来获取Apple不想开放的成员变量，利用KVC进行修改，比如自定义tabbar，textfield等，这个的应用也是比较常见
-图片1，图片2
+
+<img src="https://img2020.cnblogs.com/blog/292326/202007/292326-20200716151500784-1588098047.png" width="700"><br/>
+
 ### Category的实现原理
 1. 通过Runtime加载某个类的所有Category数据,Category编译之后的底层结构是struct category_t，里面存储着分类的对象方法、类方法、属性、协议信息
 2. 在程序运行的时候，runtime会将Category的数据，合并到类信息中（类对象、元类对象中）
@@ -82,7 +84,7 @@ objc_getAssociatedObject(obj, @selector(getter))
 - ObjectAssociationMap
 - ObjcAssociation
 
-图片2
+<img src="https://img2020.cnblogs.com/blog/292326/202007/292326-20200716151620317-1773536446.png" width="700"><br/>
 
 ### block 里面的变量为什么要用copy
 ### weak原理
