@@ -145,9 +145,9 @@ struct weak_table_t {
 ```
 weak全局表中的存储weak定义的对象的表结构weak_entry_t，weak_entry_t是存储在弱引用表中的一个内部结构体，它负责维护和存储指向一个对象的所有弱引用hash表。
 
-**weak释放为nil过程**   
-
-weak是如何被释放为nil？当对象的引用计数为0的时候会dealloc，假如weak指向的对象内存地址是a，那么就会以a为键，在这个weak表中搜索，找到以a为键的weak对象，从而设置为nil。这需要对对象整个释放过程了解，如下是对象释放的整体流程：
+那么 runtime 如何实现 weak 变量的自动置nil？  
+runtime 对注册的类， 会进行布局，对于 weak 对象会放入一个 hash 表中。 用 weak 指向的对象内存地址作为 key，当此对象的引用计数为0的时候会 dealloc，假如 weak 指向的对象内存地址是a，那么就会以a为键， 在这个 weak 表中搜索，找到所有以a为键的 weak 对象，从而设置为 nil。  
+这需要对对象整个释放过程了解，如下是对象释放的整体流程：
 1. 调用objc_release
 2. 因为对象的引用计数为0，所以执行dealloc
 3. 在dealloc中，调用了_objc_rootDealloc函数
@@ -158,15 +158,15 @@ weak是如何被释放为nil？当对象的引用计数为0的时候会dealloc�
 可参阅[浅谈iOS之weak底层实现原理](https://www.jianshu.com/p/f331bd5ce8f8)
 
 ### 离屏渲染怎么产生，怎么避免
-**在OpenGL中，GPU有2种渲染方式**
+在OpenGL中，GPU有2种渲染方式
 - On-Screen Rendering：当前屏幕渲染，在当前用于显示的屏幕缓冲区进行渲染操作
 - Off-Screen Rendering：离屏渲染，在当前屏幕缓冲区以外新开辟一个缓冲区进行渲染操作
 
-**离屏渲染消耗性能的原因**
+离屏渲染消耗性能的原因
 - 需要创建新的缓冲区
 - 离屏渲染的整个过程，需要多次切换上下文环境，先是从当前屏幕（On-Screen）切换到离屏（Off-Screen）；等到离屏渲染结束以后，将离屏缓冲区的渲染结果显示到屏幕上，又需要将上下文环境从离屏切换到当前屏幕
 
-**哪些操作会触发离屏渲染？**
+哪些操作会触发离屏渲染？
 - 光栅化：layer.shouldRasterize = YES
 - 遮罩：layer.mask
 - 圆角：同时设置layer.masksToBounds = YES、layer.cornerRadius大于0。考虑通过CoreGraphics绘制裁剪圆角，或者叫美工提供圆角图片
