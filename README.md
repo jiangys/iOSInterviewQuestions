@@ -55,24 +55,20 @@ KVC（Key-value coding）键值编码。简单来说指iOS的开发中，可以�
 ### Category如何添加成员变量？
 #### 添加关联对象
 ```Objective-C
+// 添加关联对象  
 void objc_setAssociatedObject(id object, const void * key,id value, objc_AssociationPolicy policy)
-```
-#### 获得关联对象
-```Objective-C
+// 获得关联对象   
 id objc_getAssociatedObject(id object, const void * key)
-```
-#### 移除所有的关联对象
-```Objective-C
-void objc_removeAssociatedObjects(id object)
+// 移除所有的关联对象  
+id objc_getAssociatedObject(id object, const void * key)
 ```
 #### 常用用法：
 ```Objective-C
 static void *MyKey = &MyKey;
 objc_setAssociatedObject(obj, MyKey, value, OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 objc_getAssociatedObject(obj, MyKey)
-```
-**使用get方法的@selecor作为key**
-```Objective-C
+
+// 使用get方法的@selecor作为key
 objc_setAssociatedObject(obj, @selector(getter), value, OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 objc_getAssociatedObject(obj, @selector(getter))
 ```
@@ -179,11 +175,53 @@ runtime 对注册的类， 会进行布局，对于 weak 对象会放入一个 h
 ### iOS14 新特性
 1. 汉化内容完善。在之前的Beta 1中，系统内还是很多新的功能名称依旧是英文状态，如APP 资源库就是“APP Library”。
 2. 新增【文件】桌面组件。新增了【文件】桌面组件，并且有2X2和2X4两种尺寸，可以显示最近编辑的内容。
-3. 新增Apple music触觉反馈.新增了Apple Music触觉反馈，现在摸上去会震动。
-4.【日历】【时钟】图标调整。日历图标从原来的“星期几”改成了“周几”，时钟的时针和分针变得更粗一些。
+3. 新增Apple music触觉反馈.新增了Apple Music触觉反馈，现在摸上去会震动。  
+4. 【日历】【时钟】图标调整。日历图标从原来的“星期几”改成了“周几”，时钟的时针和分针变得更粗一些。
 5. 天气小组件文字调整。在原来的天气挂件中用H、L表示最高温和最低温，更新后直接用文字显示“最高、最低”。
 6. 调整第三方组件宽度。在之前的版本中，如果添加第三方小组件，那么宽度比系统默认的一些小组件更宽，新版本将第三方小组件的宽度与系统组件统一，看起来更舒服。
 7. 充电图标变大。充电时闪电图标略微变大。
+
+技术上更新：
+
+1、App Clip
+定位：lightweight（轻量）、native（原生）、fast（快速）、focused（聚焦）、in-the-moment experience（瞬间体验）；  
+限制：NFC、二维码、Safari、苹果iMessage、Siri建议、苹果地图等入口用户主动发起并由系统调起，App没有能力主动调起Clip；   
+开发：   
+1. Clip需依附于主App，大小限制在10M以内，不能单独发布，发布流程和App一样，需要在itunesconnect创建一个版本并提交苹果审核；
+2. 入口是一段遵从Universal link格式的URL，可带参数，并可根据参数在卡片中展示不一样的标题和图片（需在itunesconnect配置）；
+3. 支持的框架跟App一致，例如：UIKit、SwiftUI等，限制是不能使用一些高级应用能力（追踪、后台运行等）和访问某些用户隐私信息，但可以在Clip打开的8小时内做免申请的通知和一次位置申请，后续可再弹框申请，另外Clip申请的授权可以同步到App的；
+应用：   
+1. 快速体验；
+2. 精准营销；
+3. 引流
+
+2、隐私
+近几届WWDC苹果对隐私问题是越来越重视，这届也提升到了一个新的高度
+隐私披露
+今年发布的最重要的变化是新的 app 隐私披露提示。苹果称，新的 UI 系统会以可见的方式让用户知道每个 app 收集了哪些种类的数据。此外，每个 app 都必须详细披露用来追踪用户的每种数据类型。
+苹果称新的隐私披露展示系统会加入所有的应用商店中，而不仅仅是 iOS app。披露要求在每个 app 页面上明确可见，所以用户能够做出决定，避免通过应用通过数据追踪用户。
+跨App追踪权限
+苹果称参与跨 app 追踪的应用现在开始也需要向用户请求特殊的权限。
+
+3、粘贴板  
+iOS14在App读取剪切板时都会以下图Toast方式提示用户，以后使用剪切板做用户行为跟踪要谨慎。
+
+4、麦克风、摄像头访问灯  
+除了上面防止用户被追踪的特征外，苹果公司还增加了一个特征来应对 App 悄悄访问 iOS 设备的摄像头和麦克风的问题。指示灯
+
+5、桌面小组件（Widgets）  
+核心：实用和聚焦
+屏幕小组件（Widgets）是这次 iOS 14 更新当中的重要功能之一，屏幕小组件赋予了 App 全新的入口，更丰富的交互层级，更多样的操作模式。
+
+6、SwiftUI  
+SwiftUI推出的目的之一就是作为苹果生态大一统的UI技术，来帮助开发者在越来越多的苹果设备上实现统一的开发体验的。去年在实践中还有很多值得诟病的地方，今年已经占据了主导地位，widget / app clisp / tvOS / WatchOS 都在安利使用SwiftUI；
+但实际上SwiftUI没有什么颠覆性的更新，主要是更新以下方面：
+1. 提高稳定性；
+2. 新增一些新API；
+3. 简化语法；
+
+7、其他  
+1. 人体关键点检测技术；
 
 # Author
 jiangys, jys509@126.com
