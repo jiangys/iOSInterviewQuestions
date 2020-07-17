@@ -153,6 +153,68 @@ runtime 对注册的类， 会进行布局，对于 weak 对象会放入一个 h
 
 可参阅[浅谈iOS之weak底层实现原理](https://www.jianshu.com/p/f331bd5ce8f8)
 
+### 什么是runtime,平时项目中有用过么？
+OC是一门动态性比较强的编程语言，允许很多操作推迟到程序运行时再进行,OC的动态性就是由Runtime来支撑和实现的，Runtime是一套C语言的API，封装了很多动态性相关的函数。平时编写的OC代码，底层都是转换成了Runtime API进行调用。
+
+具体应用
+1. 发送消息
+2. 交换方法实现（交换系统的方法）
+3. 利用关联对象（AssociatedObject）给分类添加属性，给alertView添加传值
+4. 遍历类的所有成员变量（修改textfield的占位文字颜色、字典转模型、自动归档解档）
+5. 动态添加方法
+6. 字典转模型KVC实现
+
+### 讲一下 OC 的消息机制
+OC中的方法调用其实都是转成了objc_msgSend函数的调用，给receiver（方法调用者）发送了一条消息（selector方法名）
+
+objc_msgSend底层有3大阶段
+
+消息发送（当前类、父类中查找）、动态方法解析、消息转发
+
+# RunLoop内部实现逻辑
+RunLoop的基本作用
+- 保持程序的持续运行
+- 处理App中的各种事件（比如触摸事件、定时器事件等）
+- 节省CPU资源，提高程序性能：该做事时做事，该休息时休息
+
+RunLoop与线程
+- 每条线程都有唯一的一个与之对应的RunLoop对象
+- RunLoop保存在一个全局的Dictionary里，线程作为key，RunLoop作为value
+- 线程刚创建时并没有RunLoop对象，RunLoop会在第一次获取它时创建
+- RunLoop会在线程结束时销毁
+- 主线程的RunLoop已经自动获取（创建），子线程默认没有开启RunLoop
+
+RunLoop的运行逻辑 
+1. 通知Observers：进入Loop
+2. 通知Observers：即将处理Timers
+3. 通知Observers：即将处理Sources
+4. 处理Blocks
+5. 处理Source0（可能会再次处理Blocks）
+6. 如果存在Source1，就跳转到第8步
+7. 通知Observers：开始休眠（等待消息唤醒）
+8. 通知Observers：结束休眠（被某个消息唤醒）
+- 处理Timer
+- 处理GCD Async To Main Queue
+- 处理Source1
+9. 处理Blocks
+10. 根据前面的执行结果，决定如何操作
+- 回到第02步
+- 退出Loop
+11. 通知Observers：退出Loop
+
+RunLoop休眠的实现原理   
+有个用户态和内核态，mach_msg()，等待消息
+- 没有消息就让线程休眠
+- 有消息就唤醒线程
+
+
+# RunLoop在实际开中的应用
+- 控制线程生命周期（线程保活）
+- 解决NSTimer在滑动时停止工作的问题
+- 监控应用卡顿
+- 性能优化
+
+
 ### 离屏渲染怎么产生，怎么避免
 在OpenGL中，GPU有2种渲染方式
 - On-Screen Rendering：当前屏幕渲染，在当前用于显示的屏幕缓冲区进行渲染操作
@@ -222,6 +284,10 @@ SwiftUI推出的目的之一就是作为苹果生态大一统的UI技术，来�
 
 7、其他  
 1. 人体关键点检测技术；
+
+参考
+[苹果 App Clip 技术详解](https://mp.weixin.qq.com/s/YirFmXaY-F1V62ihbYJCuw)
+[WWDC 2020 发布的安全和隐私新特征](https://www.chainnews.com/articles/377441009749.htm)
 
 # Author
 jiangys, jys509@126.com
