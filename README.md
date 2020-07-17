@@ -171,7 +171,7 @@ objc_msgSend底层有3大阶段
 
 消息发送（当前类、父类中查找）、动态方法解析、消息转发
 
-# RunLoop内部实现逻辑
+### RunLoop内部实现逻辑
 RunLoop的基本作用
 - 保持程序的持续运行
 - 处理App中的各种事件（比如触摸事件、定时器事件等）
@@ -208,11 +208,84 @@ RunLoop休眠的实现原理
 - 有消息就唤醒线程
 
 
-# RunLoop在实际开中的应用
+### RunLoop在实际开中的应用
 - 控制线程生命周期（线程保活）
 - 解决NSTimer在滑动时停止工作的问题
 - 监控应用卡顿
 - 性能优化
+
+### 多线程锁有多少种，分别怎么使用
+
+### OC对象的内存管理
+在iOS中，使用引用计数来管理OC对象的内存
+
+一个新创建的OC对象引用计数默认是1，当引用计数减为0，OC对象就会销毁，释放其占用的内存空间
+
+调用retain会让OC对象的引用计数+1，调用release会让OC对象的引用计数-1
+
+内存管理的经验总结
+当调用alloc、new、copy、mutableCopy方法返回了一个对象，在不需要这个对象时，要调用release或者autorelease来释放它
+想拥有某个对象，就让它的引用计数+1；不想再拥有某个对象，就让它的引用计数-1
+
+可以通过以下私有函数来查看自动释放池的情况  
+extern void _objc_autoreleasePoolPrint(void);
+
+### APP启动流程
+APP的启动可以分为2种
+- 冷启动（Cold Launch）：从零开始启动APP
+- 热启动（Warm Launch）：APP已经在内存中，在后台存活着，再次点击图标启动APP
+
+APP启动时间的优化，主要是针对冷启动进行优化
+
+通过添加环境变量可以打印出APP的启动时间分析（Edit scheme -> Run -> Arguments）  
+DYLD_PRINT_STATISTICS设置为1   
+如果需要更详细的信息，那就将DYLD_PRINT_STATISTICS_DETAILS设置为1  
+
+APP的冷启动可以概括为3大阶段
+1. dyld：dyld（dynamic link editor），Apple的动态链接器，可以用来装载Mach-O文件（可执行文件、动态库等）
+- 装载APP的可执行文件，同时会递归加载所有依赖的动态库
+- 当dyld把可执行文件、动态库都装载完毕后，会通知Runtime进行下一步的处理
+
+2. runtime。  
+由runtime负责加载成objc定义的结构，runtime所做的事情有
+- 调用map_images进行可执行文件内容的解析和处理
+- 在load_images中调用call_load_methods，调用所有Class和Category的+load方法
+- 进行各种objc结构的初始化（注册Objc类、初始化类对象等等）
+- 调用C++静态初始化器和__attribute__((constructor))修饰的函数
+
+到此为止，可执行文件和动态库中所有的符号(Class，Protocol，Selector，IMP，…)都已经按格式成功加载到内存中，被runtime 所管理
+
+3. main  
+所有初始化工作结束后，dyld就会调用main函数
+接下来就是UIApplicationMain函数，AppDelegate的application:didFinishLaunchingWithOptions:方法
+
+### APP的启动优化
+按照不同的阶段进行优化
+1. dyld
+- 减少动态库、合并一些动态库（定期清理不必要的动态库）
+- 减少Objc类、分类的数量、减少Selector数量（定期清理不必要的类、分类）
+- 减少C++虚函数数量
+- Swift尽量使用struct
+
+2. runtime
+- 用+initialize方法和dispatch_once取代所有的__attribute__((constructor))、C++静态构造器、ObjC的+load
+
+3. main
+- 在不影响用户体验的前提下，尽可能将一些操作延迟，不要全部都放在finishLaunching方法中
+- 按需加载
+
+### APP安装包瘦身
+安装包（IPA）主要由可执行文件、资源组成
+
+1. 资源（图片、音频、视频等）
+- 采取无损压缩
+- 去除没有用到的资源： https://github.com/tinymind/LSUnusedResources
+
+2. 可执行文件瘦身
+- 编译器优化，Strip Linked Product、Make Strings Read-Only、Symbols Hidden by Default设置为YES
+- 去掉异常支持，Enable C++ Exceptions、Enable Objective-C Exceptions设置为NO， Other C Flags添加-fno-exceptions
+- 利用AppCode（https://www.jetbrains.com/objc/）检测未使用的代码：菜单栏 -> Code -> Inspect Code
+-编写LLVM插件检测出重复代码、未被调用的代码
 
 
 ### 离屏渲染怎么产生，怎么避免
@@ -249,13 +322,13 @@ RunLoop休眠的实现原理
 定位：lightweight（轻量）、native（原生）、fast（快速）、focused（聚焦）、in-the-moment experience（瞬间体验）；  
 限制：NFC、二维码、Safari、苹果iMessage、Siri建议、苹果地图等入口用户主动发起并由系统调起，App没有能力主动调起Clip；   
 开发：   
-1. Clip需依附于主App，大小限制在10M以内，不能单独发布，发布流程和App一样，需要在itunesconnect创建一个版本并提交苹果审核；
-2. 入口是一段遵从Universal link格式的URL，可带参数，并可根据参数在卡片中展示不一样的标题和图片（需在itunesconnect配置）；
-3. 支持的框架跟App一致，例如：UIKit、SwiftUI等，限制是不能使用一些高级应用能力（追踪、后台运行等）和访问某些用户隐私信息，但可以在Clip打开的8小时内做免申请的通知和一次位置申请，后续可再弹框申请，另外Clip申请的授权可以同步到App的；
+- Clip需依附于主App，大小限制在10M以内，不能单独发布，发布流程和App一样，需要在itunesconnect创建一个版本并提交苹果审核；
+- 入口是一段遵从Universal link格式的URL，可带参数，并可根据参数在卡片中展示不一样的标题和图片（需在itunesconnect配置）；
+- 支持的框架跟App一致，例如：UIKit、SwiftUI等，限制是不能使用一些高级应用能力（追踪、后台运行等）和访问某些用户隐私信息，但可以在Clip打开的8小时内做免申请的通知和一次位置申请，后续可再弹框申请，另外Clip申请的授权可以同步到App的；  
 应用：   
-1. 快速体验；
-2. 精准营销；
-3. 引流
+- 快速体验；
+- 精准营销；
+- 引流
 
 2、隐私
 近几届WWDC苹果对隐私问题是越来越重视，这届也提升到了一个新的高度
@@ -278,9 +351,9 @@ iOS14在App读取剪切板时都会以下图Toast方式提示用户，以后使�
 6、SwiftUI  
 SwiftUI推出的目的之一就是作为苹果生态大一统的UI技术，来帮助开发者在越来越多的苹果设备上实现统一的开发体验的。去年在实践中还有很多值得诟病的地方，今年已经占据了主导地位，widget / app clisp / tvOS / WatchOS 都在安利使用SwiftUI；
 但实际上SwiftUI没有什么颠覆性的更新，主要是更新以下方面：
-1. 提高稳定性；
-2. 新增一些新API；
-3. 简化语法；
+- 提高稳定性；
+- 新增一些新API；
+- 简化语法；
 
 7、其他  
 1. 人体关键点检测技术；
