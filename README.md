@@ -172,6 +172,8 @@ objc_msgSend底层有3大阶段
 消息发送（当前类、父类中查找）、动态方法解析、消息转发
 
 ### RunLoop内部实现逻辑
+RunLoop 顾名思义是运行循环，在程序运行过程中循环做一些事情。
+
 RunLoop的基本作用
 - 保持程序的持续运行
 - 处理App中的各种事件（比如触摸事件、定时器事件等）
@@ -215,6 +217,33 @@ RunLoop休眠的实现原理
 - 性能优化
 
 ### 多线程锁有多少种，分别怎么使用
+NSRecursiveLock实际上定义的是一个递归锁，这个锁可以被同一线程多次请求，而不会引起死锁。这主要是用在循环或递归操作中
+```Objective-C
+NSLock *lock = [[NSLock alloc] init];
+dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    static void (^RecursiveMethod)(int);
+    RecursiveMethod = ^(int value) {
+        [lock lock];
+        if (value > 0) {
+            NSLog(@"value = %d", value);
+            sleep(2);
+            RecursiveMethod(value - 1);
+        }
+        [lock unlock];
+    };
+    RecursiveMethod(5);
+});
+```
+这段代码是一个典型的死锁情况。在我们的线程中，RecursiveMethod是递归调用的。所以每次进入这个block时，都会去加一次锁，而从第二次开始，由于锁已经被使用了且没有解锁，所以它需要等待锁被解除，这样就导致了死锁，线程被阻塞住了。
+
+在这种情况下，我们就可以使用NSRecursiveLock。它可以允许同一线程多次加锁，而不会造成死锁。递归锁会跟踪它被lock的次数。每次成功的lock都必须平衡调用unlock操作。只有所有达到这种平衡，锁最后才能被释放，以供其它线程使用。
+
+所以，对上面的代码进行一下改造，
+```Objective-C
+NSRecursiveLock *lock = [[NSRecursiveLock alloc] init];
+```
+这样，程序就能正常运行了。
+
 
 ### OC对象的内存管理
 在iOS中，使用引用计数来管理OC对象的内存
@@ -319,6 +348,8 @@ APP的冷启动可以概括为3大阶段
 技术上更新：
 
 1、App Clip
+App Clip是苹果公司推出的小程序功能，该功能是基于卡片的快速应用程序，可让你在需要时访问应用程序的一小部分，而无需用户安装完整的应用程序。
+
 定位：lightweight（轻量）、native（原生）、fast（快速）、focused（聚焦）、in-the-moment experience（瞬间体验）；  
 限制：NFC、二维码、Safari、苹果iMessage、Siri建议、苹果地图等入口用户主动发起并由系统调起，App没有能力主动调起Clip；   
 开发：   
