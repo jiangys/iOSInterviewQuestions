@@ -1,6 +1,8 @@
 ## iOSInterviewQuestions
 生成索引目录：https://github.com/ekalinin/github-markdown-toc  下载下来，打开gh-md-toc所有的目录，输入./gh-md-toc /Users/yongsheng/VSMVVM/README.md即可
 
+底层原理分析：[底层原理分析](NnderlyingPrinciple.md)
+
 ## 索引
    * [一个NSObject对象占用多少内存？](#一个nsobject对象占用多少内存)
    * [对象的isa指针指向哪里？](#对象的isa指针指向哪里)
