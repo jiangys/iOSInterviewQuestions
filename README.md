@@ -64,7 +64,13 @@ KVC（Key-value coding）键值编码。简单来说指iOS的开发中，可以�
 3. model和字典互转 
 4. 修改一些系统控件的内部属性，使用runtime来获取Apple不想开放的成员变量，利用KVC进行修改，比如自定义tabbar，textfield等，这个的应用也是比较常见
 
-<img src="https://img2020.cnblogs.com/blog/292326/202007/292326-20200716151500784-1588098047.png" width="700"><br/>
+设值流程
+
+![KVC_动态设值](res/kvc_setvalue.png)
+
+取值流程
+
+![KVC_动态取值](res/kvc-valueforkey.png)
 
 ### Category的实现原理
 1. 通过Runtime加载某个类的所有Category数据,Category编译之后的底层结构是struct category_t，里面存储着分类的对象方法、类方法、属性、协议信息
@@ -99,7 +105,7 @@ objc_getAssociatedObject(obj, @selector(getter))
 - ObjectAssociationMap
 - ObjcAssociation
 
-<img src="https://img2020.cnblogs.com/blog/292326/202007/292326-20200716151620317-1773536446.png" width="700"><br/>
+<img src="res/category2.png" width="700"><br/>
 
 ### +initialize和+load的的区别
 **+load方法**  
@@ -228,6 +234,23 @@ RunLoop休眠的实现原理
 有个用户态和内核态，mach_msg()，等待消息
 - 没有消息就让线程休眠
 - 有消息就唤醒线程
+
+CFRunLoopModeRef
+- CFRunLoopModeRef代表RunLoop的运行模式
+- 一个RunLoop包含若干个Mode，每个Mode又包含若干个Source0/Source1/Timer/Observer
+- RunLoop启动时只能选择其中一个Mode，作为currentMode。如果需要切换Mode，只能退出当前Loop，再重新选择一个Mode进入
+- 不同组的Source0/Source1/Timer/Observer能分隔开来，互不影响
+- 如果Mode里没有任何Source0/Source1/Timer/Observer，RunLoop会立马退出
+
+model主要是用来指定事件在运行循环中的优先级的，分为：
+- NSDefaultRunLoopMode（kCFRunLoopDefaultMode）：默认，空闲状态
+- UITrackingRunLoopMode：界面跟踪 Mode，用于 ScrollView 追踪触摸滑动，保证界面滑动时不受其他 Mode 影响
+- UIInitializationRunLoopMode：启动时
+- NSRunLoopCommonModes（kCFRunLoopCommonModes）：Mode集合
+
+苹果公开提供的 Mode 有两个(常见的2种Mode)：
+- NSDefaultRunLoopMode（kCFRunLoopDefaultMode）App的默认Mode，通常主线程是在这个Mode下运行
+- NSRunLoopCommonModes（kCFRunLoopCommonModes）不是一个真正的Mode，比如定时器，在滑动的时候还能继续倒计时，解决运行模式的缺陷
 
 
 ### RunLoop在实际开中的应用
