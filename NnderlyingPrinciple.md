@@ -88,11 +88,11 @@ size_t class_getInstanceSize(Class cls)
 
 **可以通过内存地址查看占用字节**
 1. 断点，点击！号，查看实例对象的内存地址  
-![内存地址](res/np/NSObject1.png)
+<img src="res/np/NSObject1.png" width="400"><br/>
 2. 复制内存地址  
 ![内存地址](res/np/NSObject2.png)
 3. 将内存地址，打开 Xcode --> Debug --> Debug Workflow --> View Memory，粘贴到Address中，回车   
-![内存地址](res/np/NSObject3.png)
+<img src="res/np/NSObject3.png" width="500"><br/>
 
 
 # Author
