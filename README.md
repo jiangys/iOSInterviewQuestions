@@ -35,9 +35,10 @@
 在源代码中有对齐逻辑，如果字节小于8，会自动补齐到
 
 ### 对象的isa指针指向哪里？
-- instance对象的isa指向class对象
-- class对象的isa指向meta-class对象
-- meta-class对象的isa指向基类的meta-class对象
+在OC对象中可分为实例对象、类对象、元类对象。实例对象保存成员变量信息，类对象保存属性、对象方法、协议信息、成员变量描述信息，元类对象保存的是类方法等信息。
+- instance（实例）对象的isa指向class（类）对象
+- class（类）对象的isa指向meta-class对象
+- meta-class（元类）对象的isa指向基类的meta-class对象
 
 ### OC的类信息存放在哪里？
 - 对象方法、属性、成员变量、协议信息，存放在class对象中
